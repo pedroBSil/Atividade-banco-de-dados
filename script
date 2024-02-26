@@ -1,0 +1,104 @@
+-- 1:
+SELECT *from Lote
+WHERE YEAR(datavalidade) = 2024;
+
+-- 2: 
+SELECT COUNT(*)FROM Lote
+WHERE YEAR(datavalidade) = 2025;
+
+-- 3: 
+SELECT codproduto, COUNT(*) AS total_lotes
+FROM Lote
+GROUP BY codproduto;
+
+-- 4:
+SELECT SUM(valorlote) AS valor_total_lotes FROM Lote
+WHERE codproduto = 18;
+
+-- 5: 
+SELECT * FROM Lote
+ORDER BY datavalidade;
+
+
+-- 6:
+SELECT * FROM Lote
+WHERE datavalidade BETWEEN '2024-02-01' AND '2026-06-30';
+
+-- 7a:
+INSERT INTO Fabricante (codfabricante, nomefabricante) VALUES (5, 'Ancora');
+INSERT INTO Produto (codproduto, nomeproduto, codfabricante) VALUES (20, 'Sabonete de Glicerina', 5);
+INSERT INTO Lote (numlote, datavalidade, precounitario, quantidade, codproduto) VALUES (118, '2029-12-28', 3.78, 1223, 20);
+
+-- 7b: 
+SELECT * FROM Lote
+WHERE valorlote > (SELECT AVG(valorlote) FROM Lote);
+
+--8. 
+UPDATE Lote
+SET precounitario = precounitario * 0.85
+WHERE codproduto = 11;
+
+
+--9:
+SELECT * FROM Lote WHERE codproduto = 11;
+DELETE FROM Produto WHERE codproduto = 11;
+
+
+--10:
+ALTER TABLE Lote
+ALTER COLUMN precounitario DECIMAL(10,2);
+
+--11:
+
+ALTER TABLE Lote
+ADD COLUMN STATUSLOTE VARCHAR(9) DEFAULT 'Analise';
+
+
+--12:
+CREATE TABLE #StatusLotes (
+  numlote INT NOT NULL,
+  status VARCHAR(10) NOT NULL
+);
+
+INSERT INTO #StatusLotes (numlote, status) VALUES
+(107, 'Recall'),
+(113, 'Liberado'),
+(117, 'Liberado'),
+(108, 'Recall'),
+(116, 'Recall'),
+(112, 'Liberado'),
+(109, 'Liberado'),
+(114, 'Liberado');
+
+UPDATE Lote
+SET Lote.status = #StatusLotes.status
+FROM #StatusLotes
+WHERE Lote.numlote = #StatusLotes.numlote;
+
+SELECT * FROM Lote;
+
+--13:
+SELECT
+  status,
+  COUNT(*) AS quantidade_lotes
+FROM (
+  SELECT
+    CASE
+      WHEN valorlote IS NULL THEN 'Aguardando cálculo'
+      WHEN valorlote > 1000 THEN 'Valor alto'
+      ELSE 'Normal'
+    END AS status
+  FROM Lote
+) AS LotesPorStatus
+GROUP BY status
+ORDER BY quantidade_lotes DESC;
+
+--14:
+SELECT
+  f.nomefabricante,
+  SUM(l.quantidade) AS quantidade_produtos
+FROM Lote l
+INNER JOIN Produto p ON l.codproduto = p.codproduto
+INNER JOIN Fabricante f ON p.codfabricante = f.codfabricante
+GROUP BY f.nomefabricante
+ORDER BY quantidade_produtos DESC;
